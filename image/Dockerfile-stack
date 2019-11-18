@@ -1,0 +1,38 @@
+# Dockerfile for building the stack
+
+#See https://appsody.dev/docs/stacks/environment-variables for more information about each variable.
+
+FROM adoptopenjdk/openjdk11-openj9
+
+USER root
+RUN  apt-get -qq update \
+  && apt-get -qq install -y curl maven xmlstarlet wget \
+  && DEBIAN_FRONTEND=noninteractive apt-get -qq upgrade -y \
+  && apt-get -qq clean \
+  && rm -rf /tmp/* /var/lib/apt/lists/*
+
+COPY ./LICENSE /licenses/
+COPY ./project /project
+COPY ./config /config
+
+WORKDIR /project/user-app
+
+ENV APPSODY_MOUNTS="~/.m2/repository:/mvn/repository;src:/project/user-app/src;pom.xml:/project/user-app/pom.xml"
+
+ENV APPSODY_WATCH_DIR=/project/user-app
+ENV APPSODY_WATCH_IGNORE_DIR=/project/user-app/target
+ENV APPSODY_WATCH_REGEX="^.*(.java)$"
+
+ENV APPSODY_INSTALL="mvn -Dmaven.repo.local=/mvn/repository install -DskipTests"
+
+ENV APPSODY_RUN="mvn -Dmaven.repo.local=/mvn/repository exec:java -Dexec.mainClass='com.sample.App'"
+ENV APPSODY_RUN_ON_CHANGE=
+ENV APPSODY_RUN_KILL=false
+
+ENV APPSODY_DEBUG=
+ENV APPSODY_DEBUG_ON_CHANGE=
+ENV APPSODY_DEBUG_KILL=
+
+ENV APPSODY_TEST=
+ENV APPSODY_TEST_ON_CHANGE=
+ENV APPSODY_TEST_KILL=
